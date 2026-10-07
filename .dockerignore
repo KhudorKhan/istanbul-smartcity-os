@@ -1,0 +1,17 @@
+.git
+.env
+target/
+__pycache__/
+*.pyc
+node_modules/
+.vs/
+.vscode/
+.idea/
+ai-service/
+frontend/
+docs/
+mockups/
+*.pdf
+*.png
+*.json
+repomix-output.xml

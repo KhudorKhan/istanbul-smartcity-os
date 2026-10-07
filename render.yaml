@@ -1,0 +1,21 @@
+services:
+  - type: web
+    name: smartcity-financial-backend
+    env: docker
+    plan: free
+    dockerfilePath: Dockerfile
+    envVars:
+      - key: SPRING_PROFILES_ACTIVE
+        value: prod
+      - key: DB_URL
+        fromDatabase:
+          name: smartcity-db
+          property: connectionString
+      - key: JWT_SECRET
+        generateValue: true
+
+databases:
+  - name: smartcity-db
+    plan: free
+    databaseName: smartcity_db
+    user: smartcity_user

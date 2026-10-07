@@ -1,0 +1,100 @@
+@startuml DigiBank Deployment Diagram
+
+!define RECTANGLE class
+
+skinparam componentStyle rectangle
+skinparam linetype ortho
+
+package "Client Layer" {
+    [Web Browser] as Browser
+    [Mobile App] as Mobile
+}
+
+package "Frontend Layer" {
+    component [Frontend SPA] as Frontend {
+        [Login Page]
+        [Dashboard]
+        [Payments]
+        [Monitoring]
+        [Alerts]
+    }
+}
+
+package "Render Cloud Platform" {
+    package "Web Service" {
+        node "Render Web Service" as RenderWeb {
+            component [Spring Boot Application] as Backend {
+                [Controllers]
+                [Services]
+                [Repositories]
+                [Design Patterns]
+            }
+        }
+    }
+    
+    package "Database Service" {
+        node "Render PostgreSQL" as RenderDB {
+            database "PostgreSQL Database" as DB {
+                [users table]
+                [accounts table]
+                [transactions table]
+                [audit_logs table]
+            }
+        }
+    }
+}
+
+package "External Services" {
+    [Fiat Payment Provider] as FiatProvider
+    [Crypto Networks] as CryptoNet {
+        [Ethereum]
+        [Bitcoin]
+        [Polygon]
+    }
+    [Smart City Services] as CityServices
+}
+
+' Connections
+Browser --> Frontend : HTTPS
+Mobile --> Frontend : HTTPS
+
+Frontend --> RenderWeb : REST API\n(HTTPS)
+Frontend --> RenderWeb : /actuator/health
+
+RenderWeb --> RenderDB : JDBC Connection\n(PostgreSQL Driver)
+
+Backend --> FiatProvider : Payment Processing
+Backend --> CryptoNet : Crypto Payment\n(Adapter Pattern)
+Backend --> CityServices : Service Integration
+
+' Deployment details
+note right of RenderWeb
+  **Deployment Details:**
+  - Docker Container
+  - Java 17 Runtime
+  - Port: ${PORT:8080}
+  - Health Check: /actuator/health
+  - Environment Variables:
+    * DATABASE_URL
+    * JWT_SECRET
+    * PORT
+end note
+
+note right of RenderDB
+  **Database Details:**
+  - PostgreSQL 15+
+  - Managed Service
+  - Connection via JDBC
+  - Auto-scaling enabled
+end note
+
+note right of Frontend
+  **Frontend Details:**
+  - Static SPA
+  - Environment-based API URL
+  - JWT Token Storage
+  - CORS Enabled
+end note
+
+@enduml
+

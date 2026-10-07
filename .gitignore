@@ -1,0 +1,46 @@
+### Environment & secrets ###
+.env
+.env.*
+*.env
+!.env.example
+
+### Python ###
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+### Java / Spring Boot ###
+target/
+build/
+.gradle/
+*.class
+*.jar
+!.mvn/wrapper/maven-wrapper.jar
+
+### IDE & OS ###
+.idea/
+*.iml
+*.iws
+*.ipr
+.vscode/
+.vs/
+.settings/
+.project
+.classpath
+.factorypath
+.apt_generated
+.springBeans
+.sts4-cache
+.DS_Store
+Thumbs.db
+desktop.ini
+
+### Logs ###
+*.log
+
+### Generated repository dumps ###
+repomix-output.xml

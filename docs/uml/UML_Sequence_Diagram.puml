@@ -1,0 +1,184 @@
+@startuml DigiBank Sequence Diagram - Login and Payment Flow
+
+actor "Resident" as User
+participant "Frontend" as Frontend
+participant "AuthController" as Auth
+participant "AuthService" as AuthSvc
+participant "JwtService" as JWT
+participant "PasswordEncoder" as Encoder
+participant "UserRepository" as UserRepo
+participant "AccountService" as AccountSvc
+participant "PaymentController" as Payment
+participant "PaymentService" as PaymentSvc
+participant "PaymentSecurityCheck" as Security
+participant "FraudRiskAnalysisService" as FraudRisk
+participant "CryptoAdapterFactory" as AdapterFactory
+participant "CryptoPaymentAdapter" as Adapter
+participant "NotificationSubject" as Observer
+participant "CityController" as Singleton
+participant "AuditService" as Audit
+database "PostgreSQL" as DB
+
+== Login Flow ==
+
+User -> Frontend: Enter credentials
+Frontend -> Auth: POST /api/auth/login\n{username, password}
+activate Auth
+
+Auth -> AuthSvc: login(username, password)
+activate AuthSvc
+
+AuthSvc -> UserRepo: findByUsername(username)
+activate UserRepo
+UserRepo -> DB: SELECT * FROM users WHERE username = ?
+activate DB
+DB --> UserRepo: User entity
+deactivate DB
+UserRepo --> AuthSvc: User entity
+deactivate UserRepo
+
+AuthSvc -> Encoder: matches(password, user.password)
+activate Encoder
+Encoder --> AuthSvc: true (password valid)
+deactivate Encoder
+
+AuthSvc -> JWT: generateToken(user)
+activate JWT
+JWT --> AuthSvc: JWT token
+deactivate JWT
+
+AuthSvc -> UserRepo: save(user) [update lastLogin]
+activate UserRepo
+UserRepo -> DB: UPDATE users SET lastLogin = ?
+activate DB
+DB --> UserRepo: Updated user
+deactivate DB
+UserRepo --> AuthSvc: Updated user
+deactivate UserRepo
+
+AuthSvc --> Auth: JWT token
+deactivate AuthSvc
+
+Auth --> Frontend: {success: true, data: {token, username, role}}
+deactivate Auth
+Frontend --> User: Display dashboard
+
+== Payment Flow (Crypto) ==
+
+User -> Frontend: Initiate crypto payment
+Frontend -> Payment: POST /api/pay/crypto\nAuthorization: Bearer {token}\n{amount, cryptoNetwork, serviceType}
+activate Payment
+
+Payment -> AuthSvc: validateToken(token)
+activate AuthSvc
+AuthSvc -> JWT: extractUsername(token)
+activate JWT
+JWT --> AuthSvc: username
+deactivate JWT
+AuthSvc -> UserRepo: findByUsername(username)
+activate UserRepo
+UserRepo -> DB: SELECT * FROM users WHERE username = ?
+activate DB
+DB --> UserRepo: User entity
+deactivate DB
+UserRepo --> AuthSvc: User entity
+deactivate UserRepo
+AuthSvc --> Payment: User entity
+deactivate AuthSvc
+
+Payment -> AccountSvc: getAccountByUserId(userId)
+activate AccountSvc
+AccountSvc -> DB: SELECT * FROM accounts WHERE user_id = ?
+activate DB
+DB --> AccountSvc: Account entity
+deactivate DB
+AccountSvc --> Payment: Account entity
+deactivate AccountSvc
+
+Payment -> PaymentSvc: processCryptoPayment(user, account, amount, cryptoNetwork, serviceType, description)
+activate PaymentSvc
+
+PaymentSvc -> Security: performSecurityCheck(user, amount)
+activate Security
+Security -> Security: validateUser(user)
+Security -> Security: checkAccountStatus(user)
+Security -> Security: validateAmount(amount)
+Security -> Security: performCustomChecks(user, amount)
+Security --> PaymentSvc: true (security passed)
+deactivate Security
+
+PaymentSvc -> FraudRisk: analyzeFraudRisk(user, amount, currentTime)
+activate FraudRisk
+FraudRisk -> DB: findByUserIdAndTimestampBetween(userId, startTime, endTime)
+activate DB
+DB --> FraudRisk: List<Transaction>
+deactivate DB
+FraudRisk -> FraudRisk: calculateFrequencyScore()
+FraudRisk -> FraudRisk: calculateAmountScore()
+FraudRisk -> FraudRisk: calculateTimePatternScore()
+FraudRisk -> FraudRisk: calculateBehaviorScore()
+FraudRisk --> PaymentSvc: FraudRiskScore
+deactivate FraudRisk
+
+PaymentSvc -> DB: Check account balance
+activate DB
+DB --> PaymentSvc: Account entity
+deactivate DB
+
+PaymentSvc -> PaymentSvc: Check sufficient balance
+
+PaymentSvc -> AdapterFactory: getAdapter(cryptoNetwork)
+activate AdapterFactory
+AdapterFactory --> PaymentSvc: CryptoPaymentAdapter instance
+deactivate AdapterFactory
+
+PaymentSvc -> Adapter: processPayment(walletAddress, amount, cryptoNetwork)
+activate Adapter
+Adapter -> Adapter: Convert to network format
+Adapter --> PaymentSvc: transactionHash
+deactivate Adapter
+
+PaymentSvc -> DB: UPDATE accounts SET cryptoBalance = ?
+activate DB
+DB --> PaymentSvc: Updated account
+deactivate DB
+
+PaymentSvc -> DB: INSERT INTO transactions (...)
+activate DB
+DB --> PaymentSvc: Transaction entity
+deactivate DB
+
+PaymentSvc -> Singleton: getInstance().incrementTransactionCount()
+activate Singleton
+Singleton --> PaymentSvc: OK
+deactivate Singleton
+
+PaymentSvc -> Singleton: getInstance().addRevenue(amount)
+activate Singleton
+Singleton --> PaymentSvc: OK
+deactivate Singleton
+
+PaymentSvc -> Observer: notifyObservers(transaction)
+activate Observer
+Observer -> Observer: update(transaction) [EmailNotificationObserver]
+Observer -> Observer: update(transaction) [SecurityAlertObserver]
+Observer --> PaymentSvc: Notifications sent
+deactivate Observer
+
+PaymentSvc -> Audit: logPayment(userId, "CRYPTO", amount, serviceType)
+activate Audit
+Audit -> DB: INSERT INTO audit_logs (...)
+activate DB
+DB --> Audit: AuditLog entity
+deactivate DB
+Audit --> PaymentSvc: OK
+deactivate Audit
+
+PaymentSvc --> Payment: Transaction entity
+deactivate PaymentSvc
+
+Payment --> Frontend: {success: true, data: {transaction, status: COMPLETED}}
+deactivate Payment
+Frontend --> User: Display success message
+
+@enduml

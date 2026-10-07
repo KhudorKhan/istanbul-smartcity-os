@@ -1,0 +1,75 @@
+{
+  "target": "http://localhost:8001/api/v1/ai/orchestrate",
+  "total": 8,
+  "correct_count": 1,
+  "grounded_count": 8,
+  "faithfulness": 12.5,
+  "hallucination_rate": 87.5,
+  "grounding_score": 100.0,
+  "cases": [
+    {
+      "question": "Metrobüs ve otobüs tek geçiş ücreti ne kadar?",
+      "expected_entity": "17.70",
+      "ok": false,
+      "grounded": true,
+      "latency_s": 29.76,
+      "source": "Istanbul SmartCity OS local fallback"
+    },
+    {
+      "question": "Öğrenci İstanbulkart bilet fiyatı kaç TL?",
+      "expected_entity": "8.85",
+      "ok": true,
+      "grounded": true,
+      "latency_s": 27.75,
+      "source": "İstanbul Büyükşehir Belediyesi Resmi Bilgi Bankası (2026)"
+    },
+    {
+      "question": "Kaçak geçiş ve usulsüz kart kullanım cezası ne kadar?",
+      "expected_entity": "500.00",
+      "ok": false,
+      "grounded": true,
+      "latency_s": 29.7,
+      "source": "Istanbul SmartCity OS local fallback"
+    },
+    {
+      "question": "İSKİ su faturası 15 metreküpe kadar birim fiyatı nedir?",
+      "expected_entity": "25.50",
+      "ok": false,
+      "grounded": true,
+      "latency_s": 0.27,
+      "source": "Istanbul SmartCity OS local fallback"
+    },
+    {
+      "question": "Su faturaları ayın kaçına kadar ödenmelidir?",
+      "expected_entity": "20",
+      "ok": false,
+      "grounded": true,
+      "latency_s": 0.21,
+      "source": "Istanbul SmartCity OS local fallback"
+    },
+    {
+      "question": "İSPARK A Bölgesi ilk 1 saat otopark ücreti kaç TL?",
+      "expected_entity": "40.00",
+      "ok": false,
+      "grounded": true,
+      "latency_s": 0.23,
+      "source": "Istanbul SmartCity OS local fallback"
+    },
+    {
+      "question": "İSPARK 1 saatten sonraki her ek saat ücreti nedir?",
+      "expected_entity": "20.00",
+      "ok": false,
+      "grounded": true,
+      "latency_s": 0.25,
+      "source": "Istanbul SmartCity OS local fallback"
+    },
+    {
+      "question": "İSPARK tam gün otopark abonman ücreti ne kadar?",
+      "expected_entity": "150.00",
+      "ok": false,
+      "grounded": true,
+      "latency_s": 0.36,
+      "source": "Istanbul SmartCity OS local fallback"
+    }
+  ]
+}

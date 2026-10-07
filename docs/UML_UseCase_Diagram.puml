@@ -1,0 +1,44 @@
+@startuml DigiBank Use Case Diagram
+
+left to right direction
+
+actor "Resident" as Resident
+actor "Admin" as Admin
+actor "Crypto Network" as CryptoNetwork
+actor "Smart City Service" as CityService
+
+rectangle "DigiBank System" {
+    usecase "Register Account" as UC_Register
+    usecase "Login" as UC_Login
+    usecase "View Account Balance" as UC_Balance
+    usecase "Pay with Fiat" as UC_Fiat
+    usecase "Pay with Crypto" as UC_Crypto
+    usecase "View Transaction History" as UC_History
+    usecase "Receive Notifications" as UC_Notifications
+    usecase "Monitor System Metrics" as UC_Metrics
+    usecase "View Audit Logs" as UC_Audit
+    
+    Resident --> UC_Register
+    Resident --> UC_Login
+    Resident --> UC_Balance
+    Resident --> UC_Fiat
+    Resident --> UC_Crypto
+    Resident --> UC_History
+    Resident --> UC_Notifications
+    
+    Admin --> UC_Login
+    Admin --> UC_Metrics
+    Admin --> UC_Audit
+    Admin --> UC_History
+    
+    UC_Fiat --> CryptoNetwork : "Process Payment"
+    UC_Crypto --> CryptoNetwork : "Process Payment via Adapter"
+    
+    UC_Fiat ..> UC_Notifications : "triggers"
+    UC_Crypto ..> UC_Notifications : "triggers"
+    UC_Login ..> UC_Audit : "logs"
+    UC_Fiat ..> UC_Audit : "logs"
+    UC_Crypto ..> UC_Audit : "logs"
+}
+
+@enduml

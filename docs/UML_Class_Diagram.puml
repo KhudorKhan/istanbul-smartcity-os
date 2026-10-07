@@ -1,0 +1,427 @@
+@startuml DigiBank Class Diagram
+
+package "Model" {
+    class User {
+        -Long id
+        -String username
+        -String email
+        -String password
+        -UserRole role
+        -LocalDateTime createdAt
+        -LocalDateTime lastLogin
+        +getId() : Long
+        +getUsername() : String
+        +getEmail() : String
+        +getRole() : UserRole
+    }
+    
+    enum UserRole {
+        RESIDENT
+        ADMIN
+    }
+    
+    class Account {
+        -Long id
+        -BigDecimal fiatBalance
+        -BigDecimal cryptoBalance
+        -LocalDateTime createdAt
+        -LocalDateTime updatedAt
+        +getId() : Long
+        +getFiatBalance() : BigDecimal
+        +getCryptoBalance() : BigDecimal
+    }
+    
+    class Transaction {
+        -Long id
+        -PaymentType paymentType
+        -ServiceType serviceType
+        -BigDecimal amount
+        -TransactionStatus status
+        -String cryptoNetwork
+        -String transactionHash
+        -LocalDateTime timestamp
+        -String description
+        +getId() : Long
+        +getPaymentType() : PaymentType
+        +getAmount() : BigDecimal
+        +getStatus() : TransactionStatus
+    }
+    
+    enum PaymentType {
+        FIAT
+        CRYPTO
+    }
+    
+    enum ServiceType {
+        PARKING
+        TRANSPORTATION
+        UTILITIES
+        OTHER
+    }
+    
+    enum TransactionStatus {
+        PENDING
+        COMPLETED
+        FAILED
+        CANCELLED
+    }
+    
+    class AuditLog {
+        -Long id
+        -Long userId
+        -AuditEventType eventType
+        -String action
+        -String details
+        -LocalDateTime timestamp
+        -String ipAddress
+        +getId() : Long
+        +getUserId() : Long
+        +getEventType() : AuditEventType
+    }
+    
+    enum AuditEventType {
+        AUTHENTICATION
+        PAYMENT
+        SECURITY_ALERT
+        ADMIN_ACTION
+        SYSTEM_EVENT
+    }
+    
+    User "1" --> "1" Account : OneToOne
+    User "1" --> "*" Transaction : OneToMany
+    User ..> UserRole : uses
+    Transaction ..> PaymentType : uses
+    Transaction ..> ServiceType : uses
+    Transaction ..> TransactionStatus : uses
+    AuditLog ..> AuditEventType : uses
+}
+
+package "Patterns - Singleton" {
+    class CityController {
+        -{static} volatile CityController instance
+        -AtomicLong totalTransactions
+        -AtomicLong totalRevenue
+        -LocalDateTime systemStartTime
+        -boolean systemActive
+        +{static} getInstance() : CityController
+        +incrementTransactionCount()
+        +addRevenue(long)
+        +getTotalTransactions() : long
+        +getTotalRevenue() : long
+    }
+    note right of CityController : Singleton Pattern\nCentral system controller
+}
+
+package "Patterns - Command" {
+    interface PaymentCommand {
+        +execute() : Transaction
+        +undo()
+        +canExecute() : boolean
+    }
+    
+    class FiatPaymentCommand {
+        -PaymentService paymentService
+        -User user
+        -Account account
+        -BigDecimal amount
+        -ServiceType serviceType
+        -String description
+        +execute() : Transaction
+        +undo()
+        +canExecute() : boolean
+    }
+    
+    class CryptoPaymentCommand {
+        -PaymentService paymentService
+        -User user
+        -Account account
+        -BigDecimal amount
+        -String cryptoNetwork
+        -ServiceType serviceType
+        -String description
+        +execute() : Transaction
+        +undo()
+        +canExecute() : boolean
+    }
+    
+    PaymentCommand <|.. FiatPaymentCommand : implements
+    PaymentCommand <|.. CryptoPaymentCommand : implements
+    note right of PaymentCommand : Command Pattern\nEncapsulates payment requests
+}
+
+package "Patterns - Observer" {
+    interface NotificationObserver {
+        +update(Transaction)
+        +getObserverType() : String
+    }
+    
+    class EmailNotificationObserver {
+        +update(Transaction)
+        +getObserverType() : String
+    }
+    
+    class SecurityAlertObserver {
+        +update(Transaction)
+        +getObserverType() : String
+    }
+    
+    class NotificationSubject {
+        -List<NotificationObserver> observers
+        +registerObserver(NotificationObserver)
+        +removeObserver(NotificationObserver)
+        +notifyObservers(Transaction)
+    }
+    
+    NotificationObserver <|.. EmailNotificationObserver : implements
+    NotificationObserver <|.. SecurityAlertObserver : implements
+    NotificationSubject "1" o-- "*" NotificationObserver : notifies
+    note right of NotificationObserver : Observer Pattern\nEvent notifications
+}
+
+package "Patterns - Adapter" {
+    interface CryptoPaymentAdapter {
+        +processPayment(String, BigDecimal, String) : String
+        +verifyTransaction(String, String) : boolean
+        +getNetworkName() : String
+    }
+    
+    class EthereumAdapter {
+        +processPayment(String, BigDecimal, String) : String
+        +verifyTransaction(String, String) : boolean
+        +getNetworkName() : String
+    }
+    
+    class BitcoinAdapter {
+        +processPayment(String, BigDecimal, String) : String
+        +verifyTransaction(String, String) : boolean
+        +getNetworkName() : String
+    }
+    
+    class PolygonAdapter {
+        +processPayment(String, BigDecimal, String) : String
+        +verifyTransaction(String, String) : boolean
+        +getNetworkName() : String
+    }
+    
+    class CryptoAdapterFactory {
+        +{static} getAdapter(String) : CryptoPaymentAdapter
+    }
+    
+    CryptoPaymentAdapter <|.. EthereumAdapter : implements
+    CryptoPaymentAdapter <|.. BitcoinAdapter : implements
+    CryptoPaymentAdapter <|.. PolygonAdapter : implements
+    CryptoAdapterFactory ..> CryptoPaymentAdapter : creates
+    note right of CryptoPaymentAdapter : Adapter Pattern\nMulti-blockchain integration
+}
+
+package "Patterns - Template Method" {
+    abstract class SecurityCheckTemplate {
+        #validateUser(User) : boolean
+        #checkAccountStatus(User) : boolean
+        #validateAmount(BigDecimal) : boolean
+        #performCustomChecks(User, BigDecimal) : boolean
+        +performSecurityCheck(User, BigDecimal) : boolean
+    }
+    
+    class PaymentSecurityCheck {
+        #validateUser(User) : boolean
+        #checkAccountStatus(User) : boolean
+        #validateAmount(BigDecimal) : boolean
+        #performCustomChecks(User, BigDecimal) : boolean
+    }
+    
+    SecurityCheckTemplate <|-- PaymentSecurityCheck : extends
+    note right of SecurityCheckTemplate : Template Method Pattern\nStandardized security checks
+}
+
+package "Services" {
+    class PaymentService {
+        -AccountRepository accountRepository
+        -TransactionRepository transactionRepository
+        -NotificationSubject notificationSubject
+        -PaymentSecurityCheck securityCheck
+        -AuditService auditService
+        -FraudRiskAnalysisService fraudRiskAnalysisService
+        +processFiatPayment(User, Account, BigDecimal, ServiceType, String) : Transaction
+        +processCryptoPayment(User, Account, BigDecimal, String, ServiceType, String) : Transaction
+        +refundFiatPayment(User, Account, BigDecimal)
+    }
+    
+    class AuthService {
+        -UserRepository userRepository
+        -JwtService jwtService
+        -PasswordEncoder passwordEncoder
+        +login(String, String) : String
+        +register(String, String, String, UserRole) : User
+        +validateToken(String) : User
+    }
+    
+    class AccountService {
+        -AccountRepository accountRepository
+        +getOrCreateAccount(User) : Account
+        +getAccountByUserId(Long) : Account
+    }
+    
+    class JwtService {
+        -String secret
+        -Long expiration
+        +generateToken(User) : String
+        +extractUsername(String) : String
+        +validateToken(String) : boolean
+    }
+    
+    class FraudRiskAnalysisService {
+        -TransactionRepository transactionRepository
+        +analyzeFraudRisk(User, BigDecimal, LocalDateTime) : FraudRiskScore
+    }
+    
+    class AuditService {
+        -AuditLogRepository auditLogRepository
+        +logPayment(Long, String, BigDecimal, ServiceType)
+        +logSecurityEvent(Long, String)
+        +logAuthentication(Long, String, String)
+    }
+}
+
+package "Controllers" {
+    class AuthController {
+        -AuthService authService
+        -AccountService accountService
+        +register(RegisterRequest) : ResponseEntity
+        +login(LoginRequest) : ResponseEntity
+    }
+    
+    class PaymentController {
+        -AuthService authService
+        -AccountService accountService
+        -PaymentService paymentService
+        +payFiat(PaymentRequest) : ResponseEntity
+        +payCrypto(PaymentRequest) : ResponseEntity
+    }
+    
+    class AccountController {
+        -AuthService authService
+        -AccountService accountService
+        +getBalance(String) : ResponseEntity
+    }
+    
+    class TransactionController {
+        -AuthService authService
+        -TransactionRepository transactionRepository
+        +getTransactions(String) : ResponseEntity
+        +getTransaction(Long, String) : ResponseEntity
+    }
+    
+    class MetricsController {
+        -AuthService authService
+        -AuditLogRepository auditLogRepository
+        +getMetrics(String) : ResponseEntity
+        +getLogs(String) : ResponseEntity
+    }
+}
+
+package "Repositories" {
+    interface UserRepository {
+        +findByUsername(String) : Optional<User>
+        +findByEmail(String) : Optional<User>
+        +existsByUsername(String) : boolean
+        +existsByEmail(String) : boolean
+    }
+    
+    interface AccountRepository {
+        +findByUser(User) : Optional<Account>
+        +findByUserId(Long) : Optional<Account>
+    }
+    
+    interface TransactionRepository {
+        +findByUser(User) : List<Transaction>
+        +findByUserId(Long) : List<Transaction>
+        +findByUserIdAndTimestampBetween(Long, LocalDateTime, LocalDateTime) : List<Transaction>
+    }
+    
+    interface AuditLogRepository {
+        +findByUserId(Long) : List<AuditLog>
+    }
+}
+
+package "DTOs" {
+    class LoginRequest {
+        -String username
+        -String password
+    }
+    
+    class RegisterRequest {
+        -String username
+        -String email
+        -String password
+        -UserRole role
+    }
+    
+    class PaymentRequest {
+        -PaymentType paymentType
+        -BigDecimal amount
+        -ServiceType serviceType
+        -String description
+        -String cryptoNetwork
+    }
+    
+    class ApiResponse<T> {
+        -boolean success
+        -String message
+        -T data
+    }
+    
+    class FraudRiskScore {
+        -double riskScore
+        -RiskLevel riskLevel
+        -String explanation
+        -double frequencyScore
+        -double amountScore
+        -double timePatternScore
+        -double behaviorScore
+    }
+}
+
+' Relationships
+PaymentController --> PaymentService : uses
+PaymentController --> PaymentCommand : creates
+PaymentController --> AuthService : uses
+PaymentController --> AccountService : uses
+AuthController --> AuthService : uses
+AuthController --> AccountService : uses
+AccountController --> AccountService : uses
+AccountController --> AuthService : uses
+TransactionController --> TransactionRepository : uses
+TransactionController --> AuthService : uses
+MetricsController --> CityController : uses
+MetricsController --> AuditLogRepository : uses
+MetricsController --> AuthService : uses
+
+PaymentService --> NotificationSubject : uses
+PaymentService --> PaymentSecurityCheck : uses
+PaymentService --> CryptoPaymentAdapter : uses via factory
+PaymentService --> CityController : uses
+PaymentService --> FraudRiskAnalysisService : uses
+PaymentService --> AuditService : uses
+PaymentService --> AccountRepository : uses
+PaymentService --> TransactionRepository : uses
+
+AuthService --> UserRepository : uses
+AuthService --> JwtService : uses
+AuthService --> PasswordEncoder : uses
+
+AccountService --> AccountRepository : uses
+
+FraudRiskAnalysisService --> TransactionRepository : uses
+
+AuditService --> AuditLogRepository : uses
+
+PaymentCommand --> PaymentService : uses
+FiatPaymentCommand --> PaymentService
+CryptoPaymentCommand --> PaymentService
+
+CryptoAdapterFactory ..> CryptoPaymentAdapter : creates
+
+PaymentSecurityCheck --> SecurityCheckTemplate
+
+@enduml

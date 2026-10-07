@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DigiBank - Dashboard</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #f5f5f5;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .header h1 {
+            font-size: 24px;
+        }
+        .user-info {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .balance-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            padding: 30px;
+        }
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .card h3 {
+            color: #666;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+        }
+        .card .amount {
+            font-size: 32px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 15px;
+        }
+        .card.fiat .amount {
+            color: #667eea;
+        }
+        .card.crypto .amount {
+            color: #f7931a;
+        }
+        .quick-actions {
+            padding: 0 30px 30px;
+        }
+        .quick-actions h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .action-buttons {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        .action-btn {
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .action-btn:hover {
+            border-color: #667eea;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+        }
+        .action-btn .icon {
+            font-size: 32px;
+            margin-bottom: 10px;
+        }
+        .action-btn .label {
+            font-weight: 600;
+            color: #333;
+        }
+        .recent-transactions {
+            padding: 0 30px 30px;
+        }
+        .recent-transactions h2 {
+            margin-bottom: 20px;
+            color: #333;
+        }
+        .transaction-list {
+            background: white;
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .transaction-item {
+            padding: 15px 20px;
+            border-bottom: 1px solid #f0f0f0;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .transaction-item:last-child {
+            border-bottom: none;
+        }
+        .transaction-info {
+            flex: 1;
+        }
+        .transaction-type {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 5px;
+        }
+        .transaction-date {
+            font-size: 12px;
+            color: #999;
+        }
+        .transaction-amount {
+            font-weight: bold;
+            font-size: 18px;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        .status-completed {
+            background: #d4edda;
+            color: #155724;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🏦 DigiBank Dashboard</h1>
+        <div class="user-info">
+            <span>Welcome, <strong>John Doe</strong></span>
+            <button style="background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px 15px; border-radius: 6px; cursor: pointer;">Logout</button>
+        </div>
+    </div>
+
+    <div class="balance-cards">
+        <div class="card fiat">
+            <h3>Fiat Balance</h3>
+            <div class="amount">$100.00</div>
+            <button style="background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; width: 100%;">Add Funds</button>
+        </div>
+        <div class="card crypto">
+            <h3>Crypto Balance</h3>
+            <div class="amount">0.45 ETH</div>
+            <button style="background: #f7931a; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; width: 100%;">Add Crypto</button>
+        </div>
+    </div>
+
+    <div class="quick-actions">
+        <h2>Quick Actions</h2>
+        <div class="action-buttons">
+            <div class="action-btn">
+                <div class="icon">🚗</div>
+                <div class="label">Pay Parking</div>
+            </div>
+            <div class="action-btn">
+                <div class="icon">🚇</div>
+                <div class="label">Pay Transport</div>
+            </div>
+            <div class="action-btn">
+                <div class="icon">💡</div>
+                <div class="label">Pay Utilities</div>
+            </div>
+            <div class="action-btn">
+                <div class="icon">📜</div>
+                <div class="label">View History</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="recent-transactions">
+        <h2>Recent Transactions</h2>
+        <div class="transaction-list">
+            <div class="transaction-item">
+                <div class="transaction-info">
+                    <div class="transaction-type">Parking Fee - Zone A</div>
+                    <div class="transaction-date">2024-01-15 10:30 AM</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="transaction-amount" style="color: #f7931a;">-0.05 ETH</div>
+                    <span class="status-badge status-completed">Completed</span>
+                </div>
+            </div>
+            <div class="transaction-item">
+                <div class="transaction-info">
+                    <div class="transaction-type">Transportation Ticket</div>
+                    <div class="transaction-date">2024-01-14 2:15 PM</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="transaction-amount" style="color: #667eea;">-$5.00</div>
+                    <span class="status-badge status-completed">Completed</span>
+                </div>
+            </div>
+            <div class="transaction-item">
+                <div class="transaction-info">
+                    <div class="transaction-type">Utility Bill Payment</div>
+                    <div class="transaction-date">2024-01-13 9:00 AM</div>
+                </div>
+                <div style="text-align: right;">
+                    <div class="transaction-amount" style="color: #667eea;">-$45.00</div>
+                    <span class="status-badge status-completed">Completed</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
+
+

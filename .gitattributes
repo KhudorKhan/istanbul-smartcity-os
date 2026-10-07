@@ -1,0 +1,15 @@
+* text=auto
+
+# Unix shell scripts must keep LF or they fail with "/bin/sh^M" on Linux and macOS
+mvnw text eol=lf
+*.sh text eol=lf
+
+# Windows batch scripts
+*.cmd text eol=crlf
+
+# Binary assets
+*.mp4 binary
+*.jpg binary
+*.png binary
+*.pdf binary
+*.jar binary
